@@ -1041,6 +1041,7 @@ static v4sf *cfftf1_ps(int n, const v4sf *input_readonly, v4sf *work1, v4sf *wor
   return in; /* this is in fact the output .. */
 }
 
+const static uint32_t PFFFT_MEMORY_ALIGNMENT = 64;
 
 struct SETUP_STRUCT {
   int     N;
@@ -1058,9 +1059,10 @@ size_t alignedSize(size_t size, size_t alignment) {
 
 size_t FUNC_GET_MEMORY_SIZE(int N, pffft_transform_t transform)
 {
-  const size_t alignedStructSize = alignedSize(sizeof(SETUP_STRUCT), SIMD_SZ * sizeof(float));
+  const size_t alignedStructSize = alignedSize(sizeof(SETUP_STRUCT), PFFFT_MEMORY_ALIGNMENT);
   const int dataLength = (transform == PFFFT_REAL ? N/2 : N) / SIMD_SZ;
-  const size_t dataSize = 2 * dataLength * sizeof(v4sf);
+   size_t dataSize = 2 * dataLength * sizeof(v4sf);
+    dataSize = alignedSize(dataSize, PFFFT_MEMORY_ALIGNMENT);
   return alignedStructSize + dataSize;
 }
 
@@ -1078,7 +1080,7 @@ SETUP_STRUCT *FUNC_NEW_SETUP(int N, pffft_transform_t transform, void const* pMe
   if (!s)
     return s;
 
-  const size_t alignedStructSize = alignedSize(sizeof(SETUP_STRUCT), SIMD_SZ * sizeof(float));
+  const size_t alignedStructSize = alignedSize(sizeof(SETUP_STRUCT), PFFFT_MEMORY_ALIGNMENT);
   void* pDataPointer = (char*)pMemory + alignedStructSize;
  
   s->N = N;
