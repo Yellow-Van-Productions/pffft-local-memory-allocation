@@ -100,12 +100,15 @@ extern "C" {
 
 #endif
 
+
+  size_t pffft_get_memory_size(int N, pffft_transform_t transform);
+
   /*
     prepare for performing transforms of size N -- the returned
     PFFFT_Setup structure is read-only so it can safely be shared by
     multiple concurrent threads. 
   */
-  PFFFT_Setup *pffft_new_setup(int N, pffft_transform_t transform);
+  PFFFT_Setup *pffft_new_setup(int N, pffft_transform_t transform, void const* pMemory);
   void pffft_destroy_setup(PFFFT_Setup *);
   /* 
      Perform a Fourier transform , The z-domain data is stored in the

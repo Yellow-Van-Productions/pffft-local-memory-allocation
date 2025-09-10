@@ -1041,6 +1041,7 @@ static v4sf *cfftf1_ps(int n, const v4sf *input_readonly, v4sf *work1, v4sf *wor
   return in; /* this is in fact the output .. */
 }
 
+const static uint32_t PFFFT_MEMORY_ALIGNMENT = 64;
 
 struct SETUP_STRUCT {
   int     N;
@@ -1052,7 +1053,21 @@ struct SETUP_STRUCT {
   float *twiddle; /* points into 'data', N/4 elements */
 };
 
-SETUP_STRUCT *FUNC_NEW_SETUP(int N, pffft_transform_t transform) {
+size_t alignedSize(size_t size, size_t alignment) {
+  return (size + alignment - 1) & ~(alignment - 1);
+}
+
+size_t FUNC_GET_MEMORY_SIZE(int N, pffft_transform_t transform)
+{
+  const size_t alignedStructSize = alignedSize(sizeof(SETUP_STRUCT), PFFFT_MEMORY_ALIGNMENT);
+  const int dataLength = (transform == PFFFT_REAL ? N/2 : N) / SIMD_SZ;
+   size_t dataSize = 2 * dataLength * sizeof(v4sf);
+    dataSize = alignedSize(dataSize, PFFFT_MEMORY_ALIGNMENT);
+  return alignedStructSize + dataSize;
+}
+
+
+SETUP_STRUCT *FUNC_NEW_SETUP(int N, pffft_transform_t transform, void const* pMemory) {
   SETUP_STRUCT *s = 0;
   int k, m;
   /* unfortunately, the fft size must be a multiple of 16 for complex FFTs 
@@ -1060,13 +1075,19 @@ SETUP_STRUCT *FUNC_NEW_SETUP(int N, pffft_transform_t transform) {
      handle other cases (or maybe just switch to a scalar fft, I don't know..) */
   if (transform == PFFFT_REAL)    { if ((N%(2*SIMD_SZ*SIMD_SZ)) || N<=0) return s; }
   if (transform == PFFFT_COMPLEX) { if ((N%(  SIMD_SZ*SIMD_SZ)) || N<=0) return s; }
-  s = (SETUP_STRUCT*)malloc(sizeof(SETUP_STRUCT));
+  s = (SETUP_STRUCT*)pMemory;
   /* assert((N % 32) == 0); */
+  if (!s)
+    return s;
+
+  const size_t alignedStructSize = alignedSize(sizeof(SETUP_STRUCT), PFFFT_MEMORY_ALIGNMENT);
+  void* pDataPointer = (char*)pMemory + alignedStructSize;
+ 
   s->N = N;
   s->transform = transform;  
   /* nb of complex simd vectors */
   s->Ncvec = (transform == PFFFT_REAL ? N/2 : N)/SIMD_SZ;
-  s->data = (v4sf*)FUNC_ALIGNED_MALLOC(2*s->Ncvec * sizeof(v4sf));
+  s->data = (v4sf*)pDataPointer;
   s->e = (float*)s->data;
   s->twiddle = (float*)(s->data + (2*s->Ncvec*(SIMD_SZ-1))/SIMD_SZ);  
 

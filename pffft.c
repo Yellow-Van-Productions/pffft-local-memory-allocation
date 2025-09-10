@@ -99,6 +99,7 @@
 
 /* have code comparable with this definition */
 #define SETUP_STRUCT               PFFFT_Setup
+#define FUNC_GET_MEMORY_SIZE       pffft_get_memory_size
 #define FUNC_NEW_SETUP             pffft_new_setup
 #define FUNC_DESTROY               pffft_destroy_setup
 #define FUNC_TRANSFORM_UNORDRD     pffft_transform

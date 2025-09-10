@@ -112,6 +112,7 @@
 /* have code comparable with this definition */
 #define float double
 #define SETUP_STRUCT               PFFFTD_Setup
+#define FUNC_GET_MEMORY_SIZE       pffftd_get_memory_size
 #define FUNC_NEW_SETUP             pffftd_new_setup
 #define FUNC_DESTROY               pffftd_destroy_setup
 #define FUNC_TRANSFORM_UNORDRD     pffftd_transform
