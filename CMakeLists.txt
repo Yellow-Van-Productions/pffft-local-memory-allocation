@@ -281,7 +281,7 @@ endif()
 install( TARGETS ${INSTALL_TARGETS}  DESTINATION lib)
 install( FILES  ${INSTALL_HEADERS}  DESTINATION include)
 
-add_custom_target(uninstall
+add_custom_target(uninstall_pffft
     "${CMAKE_COMMAND}" -P "${CMAKE_SOURCE_DIR}/uninstall.cmake"
 )
 
